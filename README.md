@@ -1,5 +1,13 @@
 # Olist Sales & Marketing Analytics Engineering
 
+**[🚀 Open the Live Interactive Dashboard](https://olist-sales-marketing-analytics-xhhwlysd8l5zpkmnbn6bld.streamlit.app/)**
+
+Explore seller segments, commercial performance, delivery metrics, and interactive seller-level analysis.
+
+**[View Source Code on GitHub](https://github.com/pesouza3/olist-sales-marketing-analytics)**
+
+---
+
 ## Project Overview
 
 This project develops a reproducible analytics workflow using Olist's Brazilian e-commerce and marketing funnel datasets.

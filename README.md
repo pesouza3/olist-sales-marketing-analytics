@@ -101,9 +101,29 @@ Cloud warehouse integration and live API ingestion are outside the initial scope
 
 ## Project Status
 
-**Current stage: Initial setup and source-data exploration.**
+**Current stage: Interactive dashboard and exploratory seller segmentation completed.**
 
-The repository currently contains initial scripts for inspecting CSV structures and profiling missing values. Source relationship validation, the seller-level analytical dataset, clustering, automated tests, and business reporting are planned next steps.
+The project includes:
+
+- Seller-level analytical feature engineering and data validation.
+- Documented metric definitions and checks for table relationships.
+- K-Means clustering with evaluation of candidate cluster counts.
+- Seller segment profiling and interpretation of business implications.
+- Automated tests for core analytical transformations.
+- An interactive Streamlit dashboard with filters, visualizations, seller exploration, and CSV export.
+
+The analysis is exploratory and observational. Cluster labels are descriptive, and sellers with limited order histories should be interpreted cautiously.
+
+### Running the Dashboard
+
+Install the dependencies and run the Streamlit app from the project root:
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+The dashboard requires the processed seller dataset at `data/processed/seller_segments.csv`. Raw source datasets and generated analytical outputs are excluded from version control. A deployment-ready data distribution strategy remains to be defined.
 
 ## Data Limitations
 

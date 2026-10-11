@@ -12,6 +12,11 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_PATH = PROJECT_ROOT / "data" / "processed" / "seller_segments.csv"
 
+DATA_URL = (
+    "https://drive.google.com/uc"
+    "?export=download&id=17v0NRoQiZxxrUPyMNq85hlK7sndQL1cG"
+)
+
 SEGMENT_NAMES = {
     0: "Established sellers",
     1: "Potential delivery-risk sellers",
@@ -340,24 +345,10 @@ def load_data(path: str) -> pd.DataFrame:
     return data
 
 
-if not DATA_PATH.exists():
-    st.error("Seller segment data was not found.")
-    st.markdown(
-        """
-        Run the pipeline from the project root, in this order:
-
-        1. `python src/build_seller_features.py`
-        2. `python src/prepare_clustering_features.py`
-        3. `python src/evaluate_clusters.py`
-        4. `python src/profile_seller_segments.py`
-
-        Then restart the dashboard.
-        """
-    )
-    st.stop()
+DATA_SOURCE = str(DATA_PATH) if DATA_PATH.exists() else DATA_URL
 
 try:
-    sellers = load_data(str(DATA_PATH))
+    sellers = load_data(DATA_SOURCE)
 except (ValueError, OSError, pd.errors.ParserError) as error:
     st.error(f"Unable to load seller data: {error}")
     st.stop()

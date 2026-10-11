@@ -4,8 +4,11 @@ data/raw/
 olist_ecommerce/
 olist_marketing_funnel/
 *.zip
+
 # Generated analytical outputs
-data/processed/
+data/processed/*
+!data/processed/README.md
+!data/processed/seller_segments.csv
 
 # Python environments
 .venv/

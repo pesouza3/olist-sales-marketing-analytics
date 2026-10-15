@@ -20,3 +20,10 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Local repair backups and temporary scripts
+app.backup_*.py
+app.before_repair.py
+repair_app.py
+repair_executive_insights.py
+repair_project_guide.py

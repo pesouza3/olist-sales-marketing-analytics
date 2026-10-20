@@ -18,27 +18,22 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_PATH = PROJECT_ROOT / "data" / "processed" / "seller_segments.csv"
 
-DATA_URL = (
-    "https://drive.google.com/uc"
-    "?export=download&id=17v0NRoQiZxxrUPyMNq85hlK7sndQL1cG"
-)
-
 SEGMENT_NAMES = {
-    0: "Established sellers",
-    1: "Potential delivery-risk sellers",
-    2: "Lower-volume sellers with positive observed signals",
+    0: "Higher-volume sellers",
+    1: "Lower observed delivery and review signals",
+    2: "Lower-volume sellers",
 }
 
 SEGMENT_SHORT = {
-    "Established sellers": "Established",
-    "Potential delivery-risk sellers": "Delivery risk",
-    "Lower-volume sellers with positive observed signals": "Lower volume",
+    "Higher-volume sellers": "Higher volume",
+    "Lower observed delivery and review signals": "Lower observed signals",
+    "Lower-volume sellers": "Lower volume",
 }
 
 SEGMENT_COLORS = {
-    "Established sellers": "#3767D5",
-    "Potential delivery-risk sellers": "#D97757",
-    "Lower-volume sellers with positive observed signals": "#239B83",
+    "Higher-volume sellers": "#3767D5",
+    "Lower observed delivery and review signals": "#D97757",
+    "Lower-volume sellers": "#239B83",
 }
 
 NAVY = "#172B4D"
@@ -69,19 +64,19 @@ st.markdown(
    --------------------------------------------------------- */
 
 :root {
-    --crm-bg: #F7F7FC;
+    --crm-bg: #F6F5FA;
     --crm-card: #FFFFFF;
-    --crm-purple: #5146C7;
-    --crm-purple-dark: #29264A;
-    --crm-purple-mid: #39345F;
-    --crm-purple-soft: #DCD8FF;
-    --crm-ink: #252443;
-    --crm-muted: #777791;
-    --crm-border: #E8E7F3;
-    --crm-blue: #8294E9;
-    --crm-teal: #55B8A5;
-    --crm-coral: #ED967D;
-    --crm-yellow: #F0C978;
+    --crm-purple: #6537C8;
+    --crm-purple-dark: #3B1C78;
+    --crm-purple-mid: #522AA6;
+    --crm-purple-soft: #EEE8FF;
+    --crm-ink: #211A35;
+    --crm-muted: #777287;
+    --crm-border: #EAE7F1;
+    --crm-blue: #36A9E8;
+    --crm-teal: #25B891;
+    --crm-coral: #E95784;
+    --crm-yellow: #F0B84B;
 }
 
 /* ---------------------------------------------------------
@@ -156,6 +151,30 @@ h3 {
     margin: 0.2rem 0 1.2rem !important;
 }
 
+.snapshot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #E2D9F7;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #59428C;
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.035em;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(41, 27, 83, 0.04);
+}
+
+.snapshot-dot {
+    width: 0.48rem;
+    height: 0.48rem;
+    border-radius: 50%;
+    background: #E95784;
+    box-shadow: 0 0 0 3px #FCEAF0;
+}
+
 .section-heading {
     color: var(--crm-ink) !important;
     font-size: 1.12rem !important;
@@ -185,11 +204,12 @@ h3 {
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
-        #302C58 0%,
-        #29264A 100%
+        #713BC6 0%,
+        #512C9D 55%,
+        #40217F 100%
     ) !important;
 
-    border-right: 1px solid #454064 !important;
+    border-right: 1px solid #5B32A8 !important;
 }
 
 [data-testid="stSidebar"] > div:first-child {
@@ -199,7 +219,11 @@ h3 {
 /* Texto geral */
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
-[data-testid="stSidebar"] .stCaption {
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] span,
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] *,
+[data-testid="stSidebar"] .stCaption,
+[data-testid="stSidebar"] .stCaption * {
     color: #F3F1FF !important;
 }
 
@@ -228,9 +252,15 @@ h3 {
     background: rgba(255, 255, 255, 0.10) !important;
 }
 
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+    background: rgba(255, 255, 255, 0.17) !important;
+    color: #FFFFFF !important;
+    box-shadow: inset 3px 0 0 #C8B4FF;
+}
+
 /* Divisores */
 [data-testid="stSidebar"] hr {
-    border-color: #514D73 !important;
+    border-color: rgba(255, 255, 255, 0.23) !important;
     margin: 1rem 0 !important;
 }
 
@@ -248,14 +278,14 @@ h3 {
 
 /* Chips dos segmentos selecionados */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]
-span[data-baseweb="tag"] {
+ [data-baseweb="tag"] {
     background: #5146C7 !important;
     color: #FFFFFF !important;
     border-radius: 6px !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]
-span[data-baseweb="tag"] * {
+ [data-baseweb="tag"] * {
     color: #FFFFFF !important;
 }
 
@@ -311,35 +341,62 @@ span[data-baseweb="tag"] * {
    --------------------------------------------------------- */
 
 .kpi-card {
+    position: relative;
     box-sizing: border-box;
     width: 100%;
-    min-height: 110px;
-    padding: 0.95rem 1rem;
+    min-height: 124px;
+    padding: 1rem 1rem 0.9rem;
     background: var(--crm-card);
     border: 1px solid var(--crm-border);
-    border-radius: 15px;
-    box-shadow: 0 4px 16px rgba(62, 54, 137, 0.045);
+    border-radius: 17px;
+    box-shadow: 0 7px 24px rgba(41, 27, 83, 0.055);
+    overflow: hidden;
     transition:
         transform 0.15s ease,
         box-shadow 0.15s ease;
 }
 
+.kpi-card::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--kpi-accent, var(--crm-purple));
+    content: "";
+}
+
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 9px 22px rgba(62, 54, 137, 0.09);
+    box-shadow: 0 12px 28px rgba(41, 27, 83, 0.10);
+}
+
+.kpi-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .kpi-label {
     color: var(--crm-muted);
-    font-size: 0.64rem;
+    font-size: 0.66rem;
     font-weight: 800;
-    letter-spacing: 0.055em;
-    margin-bottom: 0.65rem;
+    letter-spacing: 0.075em;
+}
+
+.kpi-icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 0.7rem;
+    color: var(--kpi-accent, var(--crm-purple));
+    background: color-mix(in srgb, var(--kpi-accent, var(--crm-purple)) 11%, white);
+    font-size: 0.95rem;
 }
 
 .kpi-value {
     color: var(--crm-ink);
-    font-size: clamp(1.25rem, 1.7vw, 1.8rem);
+    font-size: clamp(1.25rem, 1.65vw, 1.75rem);
     line-height: 1.15;
     font-weight: 800;
     letter-spacing: -0.05em;
@@ -350,7 +407,23 @@ span[data-baseweb="tag"] * {
     color: #777791;
     font-size: 0.66rem;
     line-height: 1.45;
-    margin-top: 0.42rem;
+    margin-top: 0.35rem;
+}
+
+.takeaway-label {
+    color: var(--crm-muted);
+    font-size: 0.68rem;
+    font-weight: 650;
+    margin: 0.3rem 0 0.1rem;
+}
+
+.takeaway-value {
+    color: var(--crm-ink);
+    font-size: clamp(1.1rem, 1.65vw, 1.5rem);
+    line-height: 1.2;
+    font-weight: 780;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
 }
 
 /* ---------------------------------------------------------
@@ -360,9 +433,9 @@ span[data-baseweb="tag"] * {
 [data-testid="stVerticalBlockBorderWrapper"] {
     background: #FFFFFF !important;
     border: 1px solid var(--crm-border) !important;
-    border-radius: 15px !important;
-    box-shadow: 0 4px 16px rgba(62, 54, 137, 0.04) !important;
-    padding: 0.4rem !important;
+    border-radius: 17px !important;
+    box-shadow: 0 7px 24px rgba(41, 27, 83, 0.045) !important;
+    padding: 0.45rem !important;
 }
 
 [data-testid="stPlotlyChart"] {
@@ -411,6 +484,13 @@ span[data-baseweb="tag"] * {
 .stDownloadButton > button {
     border-radius: 10px !important;
     font-weight: 700 !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.stButton > button:hover,
+.stDownloadButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(44, 24, 94, 0.10);
 }
 
 .stDownloadButton > button {
@@ -439,6 +519,19 @@ footer {
     .block-container {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
+    }
+}
+
+@media (max-width: 800px) {
+    [data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"]) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has([data-testid="stPlotlyChart"])
+    > [data-testid="column"] {
+        flex: 1 1 100% !important;
+        width: 100% !important;
     }
 }
 
@@ -520,10 +613,15 @@ def load_data(path: str) -> pd.DataFrame:
     return data
 
 
-DATA_SOURCE = str(DATA_PATH) if DATA_PATH.exists() else DATA_URL
+if not DATA_PATH.exists():
+    st.error(
+        f"Required dashboard data was not found at {DATA_PATH}. "
+        "Restore data/processed/seller_segments.csv from the project repository."
+    )
+    st.stop()
 
 try:
-    sellers = load_data(DATA_SOURCE)
+    sellers = load_data(str(DATA_PATH))
 except (ValueError, OSError, pd.errors.ParserError) as error:
     st.error(f"Unable to load seller data: {error}")
     st.stop()
@@ -657,15 +755,32 @@ def section_heading(title: str, description: str) -> None:
     )
 
 
-def kpi_card(label: str, value: str, note: str) -> None:
+def kpi_card(
+    label: str,
+    value: str,
+    note: str,
+    icon: str,
+    accent: str,
+) -> None:
     st.markdown(
         f"""
-        <div class="kpi-card">
-            <div class="kpi-label">{label}</div>
+        <div class="kpi-card" style="--kpi-accent:{accent};">
+            <div class="kpi-topline">
+                <div class="kpi-label">{label}</div>
+                <div class="kpi-icon">{icon}</div>
+            </div>
             <div class="kpi-value">{value}</div>
             <div class="kpi-note">{note}</div>
         </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def takeaway_metric(label: str, value: str) -> None:
+    st.markdown(
+        f'<div class="takeaway-label">{label}</div>'
+        f'<div class="takeaway-value">{value}</div>',
         unsafe_allow_html=True,
     )
 
@@ -699,6 +814,7 @@ def style_chart(fig, height: int = 320):
         showline=False,
         zeroline=False,
         title=None,
+        tickangle=0,
         automargin=True,
     )
     fig.update_yaxes(
@@ -744,7 +860,7 @@ def render_segment_charts(data: pd.DataFrame) -> None:
         return
 
     # Distribuição recebe aproximadamente 58% da largura.
-    left, right = st.columns([1.15, 0.85], gap="medium")
+    left, right = st.columns(2, gap="medium")
 
     category_order = [
         SEGMENT_SHORT[s]
@@ -783,6 +899,8 @@ def render_segment_charts(data: pd.DataFrame) -> None:
             range=[0, max_sellers * 1.16]
             if pd.notna(max_sellers) and max_sellers > 0
             else None,
+            dtick=1000,
+            tickformat="~s",
         )
         fig.update_layout(title="Seller distribution")
 
@@ -826,13 +944,14 @@ def render_segment_charts(data: pd.DataFrame) -> None:
             max_sales = sales["median_sales"].max()
             fig.update_xaxes(
                 rangemode="tozero",
-                tickprefix="R$ ",
+                tickformat="~s",
+                dtick=2000,
                 range=[0, max_sales * 1.32]
                 if pd.notna(max_sales) and max_sales > 0
                 else None,
             )
             fig.update_layout(
-                title="Median sales value by segment",
+                title="Median sales value by segment (R$)",
                 margin=dict(l=10, r=88, t=48, b=22),
             )
 
@@ -877,7 +996,7 @@ def render_operational_charts(data: pd.DataFrame) -> None:
                 cliponaxis=False,
                 marker_line_width=0,
             )
-            fig.update_xaxes(range=[0, 5.8], dtick=1)
+            fig.update_xaxes(range=[0, 5.8], dtick=2)
             fig.update_layout(title="Median customer review score")
 
             with st.container(border=True):
@@ -919,7 +1038,7 @@ def render_operational_charts(data: pd.DataFrame) -> None:
                 cliponaxis=False,
                 marker_line_width=0,
             )
-            fig.update_xaxes(range=[0, 115], ticksuffix="%", dtick=25)
+            fig.update_xaxes(range=[0, 115], ticksuffix="%", dtick=50)
             fig.update_layout(title="Median on-time delivery rate")
 
             with st.container(border=True):
@@ -930,89 +1049,10 @@ def render_operational_charts(data: pd.DataFrame) -> None:
                 )
 
 
-def render_operational_charts(data: pd.DataFrame) -> None:
-    summary = segment_summary(data)
-
-    left, right = st.columns(2)
-
-    with left:
-        review = summary.dropna(subset=["median_review"]).copy()
-
-        if review.empty:
-            st.info("No review observations are available for this selection.")
-        else:
-            fig = px.bar(
-                review,
-                x="median_review",
-                y="segment_short",
-                orientation="h",
-                color="segment",
-                color_discrete_map=SEGMENT_COLORS,
-                text="median_review",
-                hover_name="segment",
-                hover_data={
-                    "median_review": ":.2f",
-                    "segment_short": False,
-                    "segment": False,
-                },
-            )
-            fig.update_traces(
-                texttemplate="%{text:.2f} / 5",
-                textposition="outside",
-                cliponaxis=False,
-                marker_line_width=0,
-            )
-            fig.update_xaxes(range=[0, 5.7], dtick=1)
-            fig.update_layout(title="Median customer review score")
-            with st.container(border=True):
-                st.plotly_chart(
-                    style_chart(fig, max(250, 100 + len(summary) * 75)),
-                    width="stretch",
-                    key="review_score_chart",
-                )
-
-    with right:
-        delivery = summary.dropna(subset=["median_on_time_rate"]).copy()
-        delivery["on_time_pct"] = delivery["median_on_time_rate"] * 100
-
-        if delivery.empty:
-            st.info("No delivery observations are available for this selection.")
-        else:
-            fig = px.bar(
-                delivery,
-                x="on_time_pct",
-                y="segment_short",
-                orientation="h",
-                color="segment",
-                color_discrete_map=SEGMENT_COLORS,
-                text="on_time_pct",
-                hover_name="segment",
-                hover_data={
-                    "on_time_pct": ":.1f",
-                    "segment_short": False,
-                    "segment": False,
-                },
-            )
-            fig.update_traces(
-                texttemplate="%{text:.0f}%",
-                textposition="outside",
-                cliponaxis=False,
-                marker_line_width=0,
-            )
-            fig.update_xaxes(range=[0, 112], ticksuffix="%", dtick=25)
-            fig.update_layout(title="Median on-time delivery rate")
-            with st.container(border=True):
-                st.plotly_chart(
-                    style_chart(fig, max(250, 100 + len(summary) * 75)),
-                    width="stretch",
-                    key="on_time_chart",
-                )
-
-
 def render_executive_insights(data: pd.DataFrame) -> None:
     section_heading(
-        "Executive insights",
-        "Key observations from the current seller portfolio.",
+        "Executive takeaways",
+        "Filter-specific comparisons to guide the next investigation.",
     )
 
     if data.empty:
@@ -1035,21 +1075,25 @@ def render_executive_insights(data: pd.DataFrame) -> None:
     largest = summary.loc[summary["sellers"].idxmax()]
     sales_available = summary.dropna(subset=["median_sales"])
 
-    left, right = st.columns(2, gap="medium")
+    delivery = summary.dropna(subset=["median_on_time"])
+    weakest_delivery = (
+        delivery.loc[delivery["median_on_time"].idxmin()]
+        if not delivery.empty
+        else None
+    )
 
-    with left:
+    largest_col, sales_col, delivery_col = st.columns(3, gap="medium")
+
+    with largest_col:
         with st.container(border=True):
             st.caption("LARGEST SEGMENT")
-            st.markdown(f"### {largest['segment']}")
-            st.metric(
-                "Sellers",
-                f"{int(largest['sellers']):,}",
-            )
+            st.markdown(f"**{largest['segment']}**")
+            takeaway_metric("Sellers", f"{int(largest['sellers']):,}")
             share = float(largest["share_pct"]) / 100
             st.progress(share)
             st.caption(f"{share:.1%} of the filtered portfolio")
 
-    with right:
+    with sales_col:
         with st.container(border=True):
             st.caption("HIGHEST MEDIAN SALES VALUE")
 
@@ -1061,8 +1105,8 @@ def render_executive_insights(data: pd.DataFrame) -> None:
                     sales_available["median_sales"].idxmax()
                 ]
 
-                st.markdown(f"### {highest_sales['segment']}")
-                st.metric(
+                st.markdown(f"**{highest_sales['segment']}**")
+                takeaway_metric(
                     "Median sales value",
                     f"R$ {highest_sales['median_sales']:,.2f}",
                 )
@@ -1070,32 +1114,27 @@ def render_executive_insights(data: pd.DataFrame) -> None:
                     "Item prices attributed to a seller; freight excluded."
                 )
 
-    st.markdown("**What to investigate**")
-
-    delivery = summary.dropna(subset=["median_on_time"])
-
-    if delivery.empty:
-        st.info(
-            "Delivery comparisons are unavailable for this selection."
-        )
-    else:
-        weakest = delivery.loc[delivery["median_on_time"].idxmin()]
-
-        st.markdown(
-            f"- **Delivery signal:** "
-            f"{SEGMENT_SHORT[weakest['segment']]} has the lowest "
-            f"median on-time delivery rate in this filtered view "
-            f"({weakest['median_on_time']:.1%})."
-        )
-
-    st.markdown(
-        "- **Interpretation:** review order volume and data coverage "
-        "before drawing conclusions about individual sellers."
-    )
+    with delivery_col:
+        with st.container(border=True):
+            st.caption("LOWEST MEDIAN ON-TIME DELIVERY")
+            if weakest_delivery is None:
+                st.markdown("**Not available**")
+                st.caption("No delivery observations in this selection.")
+            else:
+                st.markdown(f"**{weakest_delivery['segment']}**")
+                takeaway_metric(
+                    "Median on-time rate",
+                    format_rate(weakest_delivery["median_on_time"]),
+                )
+                st.caption(
+                    "Use as a follow-up signal; per-seller observation "
+                    "counts are unavailable."
+                )
 
     st.caption(
-        "Historical descriptive analysis. Differences between segments "
-        "do not establish causality or predict future performance."
+        "Historical descriptive analysis. Review and delivery differences "
+        "do not establish causality or predict future performance; validate "
+        "order volume and data coverage before interpreting individual sellers."
     )
 
 
@@ -1182,7 +1221,7 @@ def render_seller_table(data: pd.DataFrame, key_prefix: str) -> None:
             "order_count": "Orders",
             "items_sold": "Items sold",
             "total_sales_value": "Sales value (R$)",
-            "average_order_value": "Average order value (R$)",
+            "average_order_value": "Average seller sales per order (R$)",
             "average_review_score": "Review score",
             "on_time_delivery_rate": "On-time delivery",
             "average_delivery_days": "Delivery days",
@@ -1190,7 +1229,9 @@ def render_seller_table(data: pd.DataFrame, key_prefix: str) -> None:
     )
 
     table["Sales value (R$)"] = table["Sales value (R$)"].round(2)
-    table["Average order value (R$)"] = table["Average order value (R$)"].round(2)
+    table["Average seller sales per order (R$)"] = table[
+        "Average seller sales per order (R$)"
+    ].round(2)
     table["Review score"] = table["Review score"].round(2)
     table["On-time delivery"] = (table["On-time delivery"] * 100).round(1)
     table["Delivery days"] = table["Delivery days"].round(1)
@@ -1210,8 +1251,8 @@ def render_seller_table(data: pd.DataFrame, key_prefix: str) -> None:
             "Sales value (R$)": st.column_config.NumberColumn(
                 "Sales value (R$)", format="R$ %.2f"
             ),
-            "Average order value (R$)": st.column_config.NumberColumn(
-                "Average order value (R$)", format="R$ %.2f"
+            "Average seller sales per order (R$)": st.column_config.NumberColumn(
+                "Average seller sales per order (R$)", format="R$ %.2f"
             ),
             "Review score": st.column_config.NumberColumn(
                 "Review score", format="%.2f"
@@ -1267,7 +1308,10 @@ def render_seller_table(data: pd.DataFrame, key_prefix: str) -> None:
 
     with profile_b:
         st.metric("Sales value", format_currency(seller["total_sales_value"]))
-        st.metric("Average order value", format_currency(seller["average_order_value"]))
+        st.metric(
+            "Average seller sales per order",
+            format_currency(seller["average_order_value"]),
+        )
 
     with profile_c:
         st.metric("Review score", format_number(seller["average_review_score"], 2))
@@ -1300,15 +1344,27 @@ def render_seller_table(data: pd.DataFrame, key_prefix: str) -> None:
 # =========================================================
 
 if page == "Overview":
-    st.markdown('<div class="eyebrow">BUSINESS INTELLIGENCE / SELLERS</div>', unsafe_allow_html=True)
-    st.title("Seller intelligence")
-    st.markdown(
-        '<div class="subtitle">'
-        "A consolidated view of seller activity, commercial performance "
-        "and operational signals."
-        "</div>",
-        unsafe_allow_html=True,
-    )
+    title_col, status_col = st.columns([3.6, 1], vertical_alignment="center")
+    with title_col:
+        st.markdown(
+            '<div class="eyebrow">BUSINESS INTELLIGENCE / SELLERS</div>',
+            unsafe_allow_html=True,
+        )
+        st.title("Seller intelligence")
+        st.markdown(
+            '<div class="subtitle">'
+            "A consolidated view of seller activity, commercial performance "
+            "and operational signals."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+    with status_col:
+        st.markdown(
+            '<div style="text-align:right;padding-bottom:1.2rem;">'
+            '<span class="snapshot-badge"><i class="snapshot-dot"></i>'
+            'HISTORICAL SNAPSHOT</span></div>',
+            unsafe_allow_html=True,
+        )
 
     section_heading(
         "Portfolio overview",
@@ -1322,6 +1378,8 @@ if page == "Overview":
             "SELLERS IN VIEW",
             f"{len(filtered):,}",
             "Sellers matching current filters",
+            "◉",
+            "#6738C8",
         )
 
     with k2:
@@ -1329,6 +1387,8 @@ if page == "Overview":
             "SEGMENTS",
             f"{filtered['segment'].nunique():,}",
             "Represented in current view",
+            "▦",
+            "#25B891",
         )
 
     with k3:
@@ -1337,7 +1397,13 @@ if page == "Overview":
             if not filtered.empty
             else "—"
         )
-        kpi_card("MEDIAN ORDERS", value, "Orders per seller")
+        kpi_card(
+            "MEDIAN ORDERS",
+            value,
+            "Orders per seller",
+            "▤",
+            "#36A9E8",
+        )
 
     with k4:
         value = (
@@ -1345,13 +1411,20 @@ if page == "Overview":
             if not filtered.empty
             else "—"
         )
-        kpi_card("MEDIAN SALES VALUE", value, "Item prices · freight excluded")
+        kpi_card(
+            "MEDIAN SALES VALUE",
+            value,
+            "Item prices · freight excluded",
+            "↗",
+            "#E95784",
+        )
 
     st.markdown(
         '<div class="note" style="margin-top:0.7rem;">'
         "Sales value is the sum of item prices attributed to a seller, "
         "excluding freight. These are historical observations, not current "
-        "seller performance."
+        "seller performance. Average seller sales per order divides this "
+        "value by distinct seller-order pairs."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -1367,9 +1440,15 @@ if page == "Overview":
 
         section_heading(
             "Operational health",
-            "Compare customer review scores and on-time delivery rates.",
+            "Median review and on-time delivery signals by segment.",
         )
         render_operational_charts(filtered)
+        st.caption(
+            "Reviews are order-level proxies and may reflect multiple "
+            "sellers. Delivery rates use delivered orders with actual "
+            "and estimated dates; per-seller observation counts are not "
+            "included, so treat small-sample rates cautiously."
+        )
 
         render_executive_insights(filtered)
 
@@ -1456,6 +1535,12 @@ elif page == "Segment Analysis":
 
         render_segment_charts(filtered)
         render_operational_charts(filtered)
+        st.caption(
+            "Review scores are order-level proxies and may reflect multiple "
+            "sellers. Delivery rates use delivered orders with actual and "
+            "estimated dates; per-seller observation counts are not included "
+            "in this dataset, so treat small-sample rates cautiously."
+        )
 
         st.markdown("### Segment definitions")
 
@@ -1477,23 +1562,23 @@ elif page == "Segment Analysis":
                     f"{format_currency(segment_data['total_sales_value'].median())}"
                 )
 
-                if segment == "Established sellers":
+                if segment == "Higher-volume sellers":
                     st.write(
-                        "This group has a more established order history in "
-                        "the observed dataset. It is a descriptive segment, "
+                        "This group has higher observed order activity and "
+                        "sales value. It is a descriptive segment, "
                         "not a guarantee of future performance."
                     )
-                elif segment == "Potential delivery-risk sellers":
+                elif segment == "Lower observed delivery and review signals":
                     st.write(
-                        "This group showed weaker observed delivery and review "
+                        "This group showed lower observed delivery and review "
                         "signals in the exploratory analysis. Validate order "
                         "counts and individual delivery records before drawing "
                         "conclusions about any seller."
                     )
                 else:
                     st.write(
-                        "This group combines lower order volumes with positive "
-                        "observed signals in the analysis. Small sample sizes "
+                        "This group combines lower order volumes and sales "
+                        "value. Small sample sizes "
                         "can make these indicators unstable."
                     )
 
@@ -1525,12 +1610,13 @@ elif page == "Seller Explorer":
                   unique marketplace orders across the whole dataset.
                 - **Items sold:** Number of order-item rows associated with the seller.
                 - **Sales value:** Sum of item prices; freight is excluded.
-                - **Average order value:** Seller sales value divided by distinct
-                  seller-order pairs.
+                - **Average seller sales per order:** Seller sales value divided
+                  by distinct seller-order pairs; this is not marketplace AOV.
                 - **Review score:** Average of associated order-level reviews;
                   it is a proxy for multi-seller orders.
                 - **On-time delivery:** Share of eligible delivery observations
-                  that met the estimated delivery date.
+                  that met the estimated delivery date. Per-seller denominators
+                  are not present in the supplied dataset.
                 - **Delivery days:** Average duration for eligible delivered orders.
                 """
             )
@@ -1558,11 +1644,11 @@ elif page == "Project Guide":
     # Executive summary
     kpi1, kpi2, kpi3, kpi4 = st.columns(4, gap="medium")
     with kpi1:
-        st.metric("Sellers analyzed", "3,095")
+        st.metric("Sellers analyzed", f"{len(sellers):,}")
     with kpi2:
         st.metric("Clustering features", "7")
     with kpi3:
-        st.metric("Selected clusters", "3")
+        st.metric("Selected clusters", f"{sellers['cluster'].nunique():,}")
     with kpi4:
         st.metric("Best silhouette", "0.3088")
 
@@ -1743,10 +1829,10 @@ elif page == "Project Guide":
                 "- `random_state=42` and `n_init=10` in the evaluation script."
             )
 
-        st.warning(
-            "The exact raw-file inventory and join rules should be checked "
-            "against the repository scripts and README before this workflow "
-            "is used as formal technical documentation."
+        st.info(
+            "Seller features use the sellers, order items, orders, and "
+            "reviews tables. Marketing funnel tables are present in the "
+            "source data but are not joined into this seller segmentation."
         )
 
     # -----------------------------------------------------
@@ -1755,8 +1841,8 @@ elif page == "Project Guide":
     with tab_model:
         st.markdown("### 03 · Model selection")
         st.markdown(
-            "The evaluation script tested seven candidate values of k "
-            "on 3,095 sellers and seven clustering features."
+            f"The evaluation script tested seven candidate values of k "
+            f"on {len(sellers):,} sellers and seven clustering features."
         )
 
         col1, col2, col3 = st.columns(3)
@@ -1858,9 +1944,7 @@ elif page == "Project Guide":
 
         segment_profiles = [
             {
-                "name": "Established sellers",
-                "count": "1,190",
-                "sales": "R$ 4,538",
+                "cluster": 0,
                 "color": "#3767D5",
                 "meaning": (
                     "Higher observed order history and median sales value "
@@ -1872,12 +1956,10 @@ elif page == "Project Guide":
                 ),
             },
             {
-                "name": "Potential delivery-risk sellers",
-                "count": "181",
-                "sales": "R$ 397",
+                "cluster": 1,
                 "color": "#D97757",
                 "meaning": (
-                    "A smaller group identified through weaker observed "
+                    "A group identified through lower observed "
                     "delivery and review signals in the exploratory analysis."
                 ),
                 "question": (
@@ -1886,13 +1968,11 @@ elif page == "Project Guide":
                 ),
             },
             {
-                "name": "Lower-volume sellers",
-                "count": "1,724",
-                "sales": "R$ 293",
+                "cluster": 2,
                 "color": "#239B83",
                 "meaning": (
-                    "Lower observed sales value and activity, with positive "
-                    "signals in the current exploratory profile."
+                    "Lower observed sales value and activity in the current "
+                    "exploratory profile."
                 ),
                 "question": (
                     "Which sellers have sufficient evidence and a realistic "
@@ -1902,20 +1982,23 @@ elif page == "Project Guide":
         ]
 
         for profile in segment_profiles:
+            profile_data = sellers[sellers["cluster"] == profile["cluster"]]
+            profile_name = SEGMENT_NAMES[profile["cluster"]]
+            median_sales = profile_data["total_sales_value"].median()
             with st.container(border=True):
                 st.markdown(
                     f'<div style="border-left:5px solid {profile["color"]};'
                     'padding:0.2rem 0 0.2rem 0.8rem;">'
-                    f'<strong>{profile["name"]}</strong></div>',
+                    f'<strong>{profile_name}</strong></div>',
                     unsafe_allow_html=True,
                 )
                 a, b = st.columns(2)
                 with a:
-                    st.metric("Sellers in segment", profile["count"])
+                    st.metric("Sellers in segment", f"{len(profile_data):,}")
                 with b:
                     st.metric(
                         "Median sales value",
-                        profile["sales"],
+                        format_currency(median_sales),
                     )
                 st.write(profile["meaning"])
                 st.caption("Question to investigate: " + profile["question"])
@@ -1952,7 +2035,7 @@ elif page == "Project Guide":
 
         actions = [
             (
-                "Established sellers",
+                "Higher-volume sellers",
                 "Retention and operational consistency",
                 "Review order volume, sales value, delivery timeliness and "
                 "customer feedback together. Identify practices worth "
@@ -1960,7 +2043,7 @@ elif page == "Project Guide":
                 "Repeat seller activity; on-time delivery; review score.",
             ),
             (
-                "Potential delivery-risk sellers",
+                "Lower observed delivery and review signals",
                 "Diagnose before intervening",
                 "Inspect eligible orders, estimated versus actual delivery "
                 "dates, observation counts and possible logistics patterns "
@@ -2052,9 +2135,8 @@ elif page == "Project Guide":
         )
 
         st.caption(
-            "Run scripts in the order above only if those filenames match "
-            "the current repository. Use the active virtual environment's "
-            "python executable, not /usr/bin/python3."
+            "Run these commands from the project root with the project's "
+            "dependencies installed."
         )
 
         st.markdown("### Key limitations")

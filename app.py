@@ -1051,8 +1051,8 @@ def render_operational_charts(data: pd.DataFrame) -> None:
 
 def render_executive_insights(data: pd.DataFrame) -> None:
     section_heading(
-        "Executive takeaways",
-        "Filter-specific comparisons to guide the next investigation.",
+        "Key conclusions",
+        "What stands out in the filtered historical data.",
     )
 
     if data.empty:
@@ -1350,11 +1350,11 @@ if page == "Overview":
             '<div class="eyebrow">BUSINESS INTELLIGENCE / SELLERS</div>',
             unsafe_allow_html=True,
         )
-        st.title("Seller intelligence")
+        st.title("Olist seller analytics")
         st.markdown(
             '<div class="subtitle">'
-            "A consolidated view of seller activity, commercial performance "
-            "and operational signals."
+            "A concise view of historical seller performance and the patterns "
+            "worth investigating."
             "</div>",
             unsafe_allow_html=True,
         )
@@ -1366,9 +1366,30 @@ if page == "Overview":
             unsafe_allow_html=True,
         )
 
+    about_col, goal_col = st.columns(2, gap="medium")
+    with about_col:
+        with st.container(border=True):
+            st.caption("ABOUT OLIST")
+            st.markdown(
+                "Olist is a Brazilian commerce technology company serving "
+                "merchants that sell online. This project uses its historical "
+                "marketplace dataset from approximately 2016–2018."
+            )
+
+    with goal_col:
+        with st.container(border=True):
+            st.caption("ANALYSIS GOAL")
+            st.markdown(
+                "Build a seller-level view of commercial and operational "
+                "performance, then identify descriptive groups and patterns "
+                "for further investigation."
+            )
+
+    render_executive_insights(filtered)
+
     section_heading(
-        "Portfolio overview",
-        "The indicators below update when you change the sidebar filters.",
+        "Portfolio snapshot",
+        "These indicators update with the shared sidebar filters.",
     )
 
     k1, k2, k3, k4 = st.columns(4)
@@ -1449,8 +1470,6 @@ if page == "Overview":
             "and estimated dates; per-seller observation counts are not "
             "included, so treat small-sample rates cautiously."
         )
-
-        render_executive_insights(filtered)
 
         with st.expander("Quick interpretation guide"):
             st.markdown(
